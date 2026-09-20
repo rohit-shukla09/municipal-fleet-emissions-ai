@@ -31,10 +31,10 @@ st.set_page_config(
 hide_header_style = """
 <style>
     [data-testid="stHeader"] {visibility: hidden;}
+    footer {visibility: hidden;}
 </style>
 """
 st.markdown(hide_header_style, unsafe_allow_html=True)
-# -------------------------------
 
 
 def _version_tuple(v: str):
