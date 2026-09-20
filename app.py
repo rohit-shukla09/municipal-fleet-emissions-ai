@@ -199,6 +199,8 @@ def domain_check(cls, fuel_, age_, mileage_):
     return found
 
 baseline_emissions = {'Service Van': 220.0, 'Transit Bus': 1100.0, 'Waste Truck': 1300.0}
+FUEL_MODS = {'CNG': 0.85, 'Hybrid': 0.75, 'Diesel': 1.0, 'Petrol': 1.0}
+ROUTE_MODS = {'Urban Stop-and-Go': 1.25, 'Highway Transit': 0.90, 'Mixed Suburban': 1.0}
 
 FEATURE_COLS = ['Vehicle_Age_Years', 'Cumulative_Mileage', 'Vehicle_Class_encoded',
                 'Fuel_Type_encoded', 'Route_Type_encoded']
@@ -352,7 +354,12 @@ start_time = time.perf_counter()
 pred = float(model.predict(single_features)[0])
 latency_ms = (time.perf_counter() - start_time) * 1000
 
-base = baseline_emissions.get(v_class, 1000.0)
+# Like-for-like baseline logic incorporating fuel and route modifiers
+base_class = baseline_emissions.get(v_class, 1000.0)
+fuel_factor = FUEL_MODS.get(fuel, 1.0)
+route_factor = ROUTE_MODS.get(route, 1.0)
+base = base_class * fuel_factor * route_factor
+
 med_thresh = base * (1 + med_pct / 100)
 high_thresh = base * (1 + high_pct / 100)
 max_gauge = base * 1.18
@@ -413,7 +420,13 @@ def score_fleet(df: pd.DataFrame, med_pct_: float, high_pct_: float, annual_km_:
     for c in ['Vehicle Class', 'Fuel Type', 'Route Type']:
         out[c] = out[c].astype(object)
     preds = predict_raw(raw)
+    
+    # Calculate like-for-like baselines for the entire batch
     base_v = out['Vehicle Class'].map(baseline_emissions).fillna(1000.0).to_numpy(dtype=float)
+    fuel_f = out['Fuel Type'].map(FUEL_MODS).fillna(1.0).to_numpy(dtype=float)
+    route_f = out['Route Type'].map(ROUTE_MODS).fillna(1.0).to_numpy(dtype=float)
+    base_v = base_v * fuel_f * route_f
+    
     out['Predicted_CO2_g_km'] = np.round(preds, 2)
     out['Baseline_CO2_g_km'] = base_v
     out['Degradation (%)'] = np.round((out['Predicted_CO2_g_km'].to_numpy() - base_v) / base_v * 100, 1)
@@ -454,7 +467,7 @@ else:
 sys1.metric("Assets Analyzed", f"{asset_count:,}", asset_note, delta_color=asset_color)
 sys2.metric("AI Engine Status", f"XGBoost v{xgb.__version__}", "Online")
 sys3.metric("Inference Latency", f"{latency_ms:.2f} ms", "Real-Time Execution")
-sys4.metric("Database Secure Sync", "Active", "AES-256")
+sys4.metric("Data Processing", "Ephemeral", "No DB Storage")
 
 # Warn when the selected vehicle lies outside what the model was trained on
 input_issues = domain_check(v_class, fuel, age, mileage)
@@ -536,12 +549,12 @@ with tab1:
             st.warning(f"⚠️ **MAINTENANCE REQUIRED**\n\nDegradation is +{degradation_pct:.1f}%. "
                        "Mechanical overhaul or route reassignment advised.")
         else:
-            display_deg = max(0.0, degradation_pct)
-            st.success(f"✅ **OPTIMAL OPERATION**\n\nOperating within +{display_deg:.1f}% of baseline. "
+            pct_diff = ((pred - base) / base) * 100
+            st.success(f"✅ **OPTIMAL OPERATION**\n\nOperating {abs(pct_diff):.1f}% below threshold. "
                        "Meets municipal sustainability standards.")
 
-        st.metric(label="Inference Confidence", value="XGBoost Regressor",
-                  delta="Trained with Standardized Features")
+        st.metric(label="Inference Engine", value="XGBoost",
+                  delta="Active")
 
     st.markdown("#### Diagnostic summary")
     d1, d2, d3, d4 = st.columns(4)
@@ -964,7 +977,11 @@ with tab5:
     alt_raw = pd.DataFrame([{'v_class': v_class, 'fuel': alt_fuel, 'route': route,
                              'age': alt_age, 'mileage': alt_mileage}])
     alt_pred = float(predict_raw(alt_raw)[0])
-    alt_status = status_for(alt_pred, base)
+    
+    # Calculate a like-for-like baseline for the alternative scenario
+    alt_base = base_class * FUEL_MODS.get(alt_fuel, 1.0) * route_factor
+    alt_status = status_for(alt_pred, alt_base)
+    
     alt_tons = alt_pred * annual_km / 1_000_000
     tons_delta = alt_tons - annual_co2_single
     cost_delta = tons_delta * tax_rate
@@ -982,7 +999,7 @@ with tab5:
         text=[f"{pred:.1f}", f"{alt_pred:.1f}"], textposition="outside",
     ))
     cmp_fig.add_hline(y=base, line_dash="dash", line_color=PALETTE_NAVY,
-                      annotation_text=f"Factory baseline {base:.0f} g/km", annotation_position="top left")
+                      annotation_text=f"Current baseline {base:.0f} g/km", annotation_position="top left")
     cmp_fig.update_layout(yaxis_title="Predicted CO2 (g/km)", showlegend=False)
     st.plotly_chart(style_fig(cmp_fig, 340), **STRETCH)
 
@@ -991,7 +1008,11 @@ with tab5:
     fuel_raw = pd.DataFrame({'v_class': v_class, 'fuel': fuel_names, 'route': route,
                              'age': age, 'mileage': mileage})
     fuel_preds = predict_raw(fuel_raw)
-    fuel_status = classify(fuel_preds, base, med_pct, high_pct)
+    
+    # Compute the like-for-like baseline for each alternative fuel type
+    fuel_bases = np.array([base_class * FUEL_MODS.get(f, 1.0) * route_factor for f in fuel_names])
+    fuel_status = classify(fuel_preds, fuel_bases, med_pct, high_pct)
+    
     seen_fuels = DOMAIN['fuels_by_class'].get(v_class, fuel_names)
     fuel_seen = [f_ in seen_fuels for f_ in fuel_names]
     fuel_fig = go.Figure(go.Bar(
@@ -1000,7 +1021,8 @@ with tab5:
         text=[f"{v:.1f}" if ok else f"{v:.1f} (not in training data)" for v, ok in zip(fuel_preds, fuel_seen)],
         textposition="outside",
     ))
-    fuel_fig.add_hline(y=base, line_dash="dash", line_color=PALETTE_NAVY)
+    fuel_fig.add_hline(y=base, line_dash="dash", line_color=PALETTE_NAVY,
+                       annotation_text=f"Current baseline {base:.0f} g/km", annotation_position="top left")
     fuel_fig.update_layout(yaxis_title="Predicted CO2 (g/km)", showlegend=False)
     st.plotly_chart(style_fig(fuel_fig, 320), **STRETCH)
     st.caption("Bars use the same status colours as the diagnostic gauge; grey bars are fuel types that never "
