@@ -28,13 +28,19 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-hide_header_style = """
+hide_elements_style = """
 <style>
+    /* Hide the top header */
     [data-testid="stHeader"] {visibility: hidden;}
+    
+    /* Hide the default footer */
     footer {visibility: hidden;}
+    
+    /* Hide the 'Created by...' and 'Hosted with Streamlit' badges */
+    div[class^="viewerBadge"] {display: none !important;}
 </style>
 """
-st.markdown(hide_header_style, unsafe_allow_html=True)
+st.markdown(hide_elements_style, unsafe_allow_html=True)
 
 
 def _version_tuple(v: str):
