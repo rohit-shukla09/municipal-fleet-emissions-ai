@@ -1,0 +1,67 @@
+{
+  "created_at": "2026-09-20T14:20:53",
+  "fit_on": "training split only",
+  "feature_cols": [
+    "Vehicle_Age_Years",
+    "Cumulative_Mileage",
+    "Vehicle_Class_encoded",
+    "Fuel_Type_encoded",
+    "Route_Type_encoded"
+  ],
+  "means": {
+    "age": 7.857387825092884,
+    "mileage": 216764.69391254644,
+    "class": 1024.2189020122794,
+    "fuel": 1024.2189020122794,
+    "route": 1024.2189020122796
+  },
+  "stds": {
+    "age": 4.352299196418782,
+    "mileage": 136935.30773966946,
+    "class": 524.8445560475012,
+    "fuel": 325.2187475959835,
+    "route": 125.14254013552856
+  },
+  "class_map": {
+    "Service Van": 260.1724224457165,
+    "Transit Bus": 1187.414706119827,
+    "Waste Truck": 1573.6214724677432
+  },
+  "fuel_map": {
+    "CNG": 1228.7741898333106,
+    "Diesel": 1153.0988044745848,
+    "Hybrid": 1083.9463520244735,
+    "Petrol": 257.0670053096213
+  },
+  "route_map": {
+    "Highway Transit": 853.7132367279443,
+    "Mixed Suburban": 930.8786049537475,
+    "Urban Stop-and-Go": 1144.4029305651434
+  },
+  "domain": {
+    "age": [
+      1,
+      15
+    ],
+    "km_per_year": [
+      15012.0,
+      39993.0
+    ],
+    "fuels_by_class": {
+      "Service Van": [
+        "Diesel",
+        "Petrol"
+      ],
+      "Transit Bus": [
+        "CNG",
+        "Diesel",
+        "Hybrid"
+      ],
+      "Waste Truck": [
+        "CNG",
+        "Diesel",
+        "Hybrid"
+      ]
+    }
+  }
+}

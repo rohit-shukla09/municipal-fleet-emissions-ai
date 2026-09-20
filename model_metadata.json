@@ -1,0 +1,57 @@
+{
+  "trained_at": "2026-09-20T14:20:53",
+  "xgboost_version": "3.2.0",
+  "features": [
+    "Vehicle_Age_Years",
+    "Cumulative_Mileage",
+    "Vehicle_Class_encoded",
+    "Fuel_Type_encoded",
+    "Route_Type_encoded"
+  ],
+  "data": {
+    "source": "synthetic",
+    "rows_total": 5000,
+    "seed": 42
+  },
+  "rows": {
+    "train": 3499,
+    "validation": 751,
+    "test": 750
+  },
+  "best_n_trees": 412,
+  "params": {
+    "n_estimators": 1000,
+    "learning_rate": 0.05,
+    "max_depth": 6,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "tree_method": "hist",
+    "early_stopping_rounds": 50,
+    "random_state": 42,
+    "device": "cuda"
+  },
+  "cv": {
+    "scheme": "RepeatedKFold 5x3, preprocessing re-fitted per fold",
+    "r2_mean": 0.998969150369951,
+    "r2_std": 7.364327899513049e-05
+  },
+  "train": {
+    "r2": 0.9995759531847592,
+    "rmse": 11.69943491874235,
+    "mae": 9.308716557598126
+  },
+  "validation": {
+    "r2": 0.9990340059352911,
+    "rmse": 17.64128721310417,
+    "mae": 13.947786862375233
+  },
+  "test": {
+    "r2": 0.998873007056471,
+    "rmse": 18.494737871801597,
+    "mae": 14.416957011966476
+  },
+  "percentile_thresholds": {
+    "medium_p50": 1140.8154685395746,
+    "high_p85": 1594.6258182357817
+  }
+}
