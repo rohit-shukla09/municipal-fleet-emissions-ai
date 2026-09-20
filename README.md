@@ -48,21 +48,43 @@ Predicted emissions are compared with a per-class factory baseline. Thresholds a
 * **Data:** 5,000 synthetic vehicles, ages 1–15 years, 15,000–40,000 km per year
 * **Validation:** Repeated 5-fold cross-validation (3 repeats), preprocessing refitted in every fold
 
+## Development with IBM Bob
+The synthetic fleet dataset, the preprocessing pipeline and the model-training scripts were developed with **IBM Bob**, IBM's AI development partner. Requirements were written as natural-language prompts; the generated code was then reviewed, run and refined by the author. Later refinement of the pipeline, dashboard and documentation used a general-purpose AI assistant.
+
+| Stage | Objective | Tool |
+| :--- | :--- | :--- |
+| Data generation | Realistic synthetic fleet dataset (5,000 vehicles, fixed seed) | IBM Bob |
+| Preprocessing | Target encoding, standardisation, cleaned dataset | IBM Bob |
+| Model training | XGBoost with train/validation/test split, early stopping, repeated CV | IBM Bob |
+| Dashboard | Streamlit app with batch, ROI, explainability and what-if views | IBM Bob, later refined with a general-purpose AI assistant |
+
+## Project Structure
+```text
+.
+├── app.py                    # Streamlit dashboard
+├── docs/                     # Dashboard screenshots
+├── xgb_model.json            # Trained model
+├── preprocessing.json        # Encodings, scaler values and training ranges
+├── model_metadata.json       # Metrics, parameters and versions
+├── municipal_fleet_100.csv   # Sample fleet for batch scoring
+├── requirements.txt          # Dependencies
+├── fleet_pipeline.py         # Data generation, preprocessing, training and export
+├── data_prep.py              # Data preparation script (IBM Bob)
+├── train_model.py            # Model training script (IBM Bob)
+└── raw_fleet_data.xls        # Raw dataset
+```
+
 ## Quick Start
 ```bash
-git clone [https://github.com/rohit-shukla09/municipal-fleet-emissions-ai.git](https://github.com/rohit-shukla09/municipal-fleet-emissions-ai.git)
-├── app.py                   # Streamlit dashboard
-├── docs/                    # Dashboard screenshots
-├── xgb_model.json           # Trained model
-├── municipal_fleet_100.csv  # Sample fleet for batch scoring
-├── requirements.txt         # Dependencies
-├── train_model.py           # Model training script
-├── data_prep.py             # Data preparation script
-└── raw_fleet_data.xls       # Raw dataset
-Tech Stack
-Streamlit, Plotly, XGBoost, scikit-learn, pandas, NumPy.
-
-Author: Rohit Shukla · M.Sc. Data Science & Applied Statistics
+git clone https://github.com/rohit-shukla09/municipal-fleet-emissions-ai.git
 cd municipal-fleet-emissions-ai
 pip install -r requirements.txt
 streamlit run app.py
+```
+Upload `municipal_fleet_100.csv` from the sidebar to try batch scoring.
+
+## Tech Stack
+Streamlit, Plotly, XGBoost, scikit-learn, pandas, NumPy.
+
+## Author
+**Rohit Shukla** · M.Sc. Data Science & Applied Statistics
