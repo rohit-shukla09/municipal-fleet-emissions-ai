@@ -267,7 +267,8 @@ st.sidebar.markdown("Configure vehicle specifications for real-time AI inference
 v_class = st.sidebar.selectbox("Vehicle Class", ['Transit Bus', 'Waste Truck', 'Service Van'], key="v_class")
 fuel = st.sidebar.selectbox("Fuel Type", ['Diesel', 'CNG', 'Petrol', 'Hybrid'], key="fuel")
 route = st.sidebar.selectbox("Route Type", ['Urban Stop-and-Go', 'Mixed Suburban', 'Highway Transit'], key="route")
-age = st.sidebar.slider("Vehicle Age (Years)", min_value=0, max_value=25, step=1, key="age")
+age = st.sidebar.slider("Vehicle Age (Years)", min_value=DOMAIN['age'][0], max_value=DOMAIN['age'][1],
+                        step=1, key="age")
 mileage = st.sidebar.slider("Cumulative Mileage (km)", min_value=0, max_value=1000000, step=5000,
                             format="%d", key="mileage")
 
@@ -702,7 +703,7 @@ with tab3:
     st.markdown("#### Sensitivity: how the prediction responds")
     sweep_var = st.radio("Vary", ["Vehicle Age", "Cumulative Mileage"], horizontal=True, key="sweep_var")
     if sweep_var == "Vehicle Age":
-        xs = np.arange(0, 26)
+        xs = np.arange(DOMAIN['age'][0], DOMAIN['age'][1] + 1)
         cur_x = age
         x_title = "Vehicle Age (Years)"
         sweep_raw = pd.DataFrame({'v_class': v_class, 'fuel': fuel, 'route': route, 'age': xs, 'mileage': mileage})
@@ -937,7 +938,8 @@ with tab5:
 
     w1, w2, w3 = st.columns(3)
     alt_fuel = w1.selectbox("Replacement fuel type", ['Hybrid', 'CNG', 'Diesel', 'Petrol'], key="alt_fuel")
-    alt_age = w2.slider("Replacement age (years)", 0, 25, 1, key="alt_age")
+    alt_age = w2.slider("Replacement age (years)", DOMAIN['age'][0], DOMAIN['age'][1], DOMAIN['age'][0],
+                        key="alt_age")
     alt_mileage = w3.slider("Replacement mileage (km)", 0, 1_000_000, 25000, step=5000, format="%d", key="alt_mileage")
 
     alt_issues = domain_check(v_class, alt_fuel, alt_age, alt_mileage)
